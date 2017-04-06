@@ -168,6 +168,8 @@ def calculate_optimal_coeffs(X_in, list_coeffs, linear_models, list_dimensions_a
     
     list_coeffs[0].append(W)
     list_coeffs[1].append(b)
+    list_coeffs[2].append(X_in)
+    list_coeffs[3].append(parameters[0])
     
     return calculate_optimal_coeffs(X_next, list_coeffs, linear_models[1:], list_dimensions_ahead[1:], activation_mode)
     
@@ -193,7 +195,7 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
     #DataSetX = np.array([[0.1],[0.2],[0.3],[0.4],[0.5],[0.6],[0.7],[0.8],[0.9]])
     #DataSetY = np.array([0.0])
     
-    DataSetX = np.linspace(-np.pi, np.pi, 10)
+    DataSetX = np.linspace(-np.pi, np.pi, 11)
     DataSetX = np.array([[x] for x in DataSetX])
     DataSetY = np.array([[(1.0 + np.sin(t)) / 2.0] for t in DataSetX])
     
@@ -206,10 +208,12 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
         
         print("Working for******************************************************** ", i)
         models = learn_network_for_one_x(DataSetY[i], list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
-        coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[]], models,  net_architecture, activation_mode)
+        coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models,  net_architecture, activation_mode)
         List_of_coeffs_for_different_pairs.append(coeffs)
     
-    coeffs_total = [[],[]]
+    coeffs_total = [[],[],[],[]]
+    
+    Generic_models = []
     
     for i in range(len(List_of_coeffs_for_different_pairs[0][0])):
         W_list = [List_of_coeffs_for_different_pairs[j][0][i] for j in range(len(DataSetX))]
@@ -218,12 +222,25 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
         b_list = [List_of_coeffs_for_different_pairs[j][1][i] for j in range(len(DataSetX))]
         b = sum(b_list)
         coeffs_total[1].append(b / len(DataSetX))
+        
+        XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(DataSetX))]
+        ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(DataSetX))]
+        #model = sklearn.linear_model.LinearRegression()
+        model = DecisionTreeRegressor(max_depth = 6)
+        #print(XSetOnThisLayer[0].shape)
+        #print(ParamSetOnThisLayer[0].shape)
+        model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
+        Generic_models.append(model)
+        
     #
     Predictions1 = [calculate_prediction_from_coeffs(DataSetX[i], coeffs_total, mode_loss, activation_mode) for i in range(len(DataSetX))]
     
     Predictions2 = [calculate_prediction_from_coeffs(DataSetX[i], List_of_coeffs_for_different_pairs[i], mode_loss, activation_mode) for i in range(len(DataSetX))]
-    plt.plot(DataSetX,[x[0] for x in DataSetY], DataSetX, Predictions1, 'o')
-    plt.plot(DataSetX,[x[0] for x in DataSetY], DataSetX, Predictions2, 'o')
+    Predictions3 = [calculate_prediction(DataSetX[i], Generic_models,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX))]
+    plt.plot(DataSetX,[x[0] for x in DataSetY])
+    #plt.plot(DataSetX, Predictions1, 'o')
+    #plt.plot(DataSetX, Predictions2, 'o')
+    plt.plot(DataSetX, Predictions3, 'o')
     plt.show()
     
     #print(coeffs[0][0].shape, coeffs[0][1].shape, coeffs[1][0].shape, coeffs[1][1].shape)
