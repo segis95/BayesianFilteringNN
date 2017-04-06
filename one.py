@@ -197,6 +197,9 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
     
     DataSetX = np.linspace(-np.pi, np.pi, 11)
     DataSetX = np.array([[x] for x in DataSetX])
+    DataSetX1 = np.linspace(-np.pi, np.pi, 13)
+    DataSetX1 = np.array([[x] for x in DataSetX1])
+    
     DataSetY = np.array([[(1.0 + np.sin(t)) / 2.0] for t in DataSetX])
     
     
@@ -226,7 +229,7 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
         XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(DataSetX))]
         ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(DataSetX))]
         #model = sklearn.linear_model.LinearRegression()
-        model = DecisionTreeRegressor(max_depth = 6)
+        model = DecisionTreeRegressor(max_depth = 8)
         #print(XSetOnThisLayer[0].shape)
         #print(ParamSetOnThisLayer[0].shape)
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
@@ -236,11 +239,11 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
     Predictions1 = [calculate_prediction_from_coeffs(DataSetX[i], coeffs_total, mode_loss, activation_mode) for i in range(len(DataSetX))]
     
     Predictions2 = [calculate_prediction_from_coeffs(DataSetX[i], List_of_coeffs_for_different_pairs[i], mode_loss, activation_mode) for i in range(len(DataSetX))]
-    Predictions3 = [calculate_prediction(DataSetX[i], Generic_models,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX))]
+    Predictions3 = [calculate_prediction(DataSetX1[i], Generic_models,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
     plt.plot(DataSetX,[x[0] for x in DataSetY])
     #plt.plot(DataSetX, Predictions1, 'o')
     #plt.plot(DataSetX, Predictions2, 'o')
-    plt.plot(DataSetX, Predictions3, 'o')
+    plt.plot(DataSetX1, Predictions3, 'o')
     plt.show()
     
     #print(coeffs[0][0].shape, coeffs[0][1].shape, coeffs[1][0].shape, coeffs[1][1].shape)
