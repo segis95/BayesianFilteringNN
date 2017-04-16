@@ -9,6 +9,8 @@ from pyDOE import lhs
 import sklearn.linear_model
 from sklearn.tree import DecisionTreeRegressor
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
+import random
 
 def get_train_set(dim, number_of_steps):
     z = [[y] for y in np.linspace(-4, 4, number_of_steps)]
@@ -49,8 +51,8 @@ def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_a
     #Parameters
     
     number_x_items = 10
-    number_expectation_items = 20
-    number_items_per_expectation = 10
+    number_expectation_items = 10
+    number_items_per_expectation = 5
     
     
     dim1 = list_dimensions_behind[-2]
@@ -103,7 +105,7 @@ def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_a
         
     #print(dim1, dim2)    
     model = sklearn.linear_model.LinearRegression()
-    #model = DecisionTreeRegressor(max_depth = 16)
+    #model = DecisionTreeRegressor(max_depth = 8)
     
     model.fit(X_input_set, x_to_expectation)
     
@@ -190,17 +192,21 @@ def calculate_prediction_from_coeffs(X_in_, list_coeffs, mode_loss, activation_m
     
     
     
-def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
+def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mode):
     
     #DataSetX = np.array([[0.1],[0.2],[0.3],[0.4],[0.5],[0.6],[0.7],[0.8],[0.9]])
     #DataSetY = np.array([0.0])
     
-    DataSetX = np.linspace(-np.pi, np.pi, 11)
+    DataSetX_0 = np.linspace(-np.pi, np.pi, 11)
+    DataSetY = np.array([[(1.0 + np.sin(t)) / 2.0] for t in DataSetX_0])
+    DataSetX = np.linspace(0.0, 1.0, 11)
     DataSetX = np.array([[x] for x in DataSetX])
-    DataSetX1 = np.linspace(-np.pi, np.pi, 13)
+    DataSetX1 = np.linspace(0, 1, 13)
     DataSetX1 = np.array([[x] for x in DataSetX1])
+    DataSetX1_0 = np.linspace(-np.pi, np.pi, 13)
     
-    DataSetY = np.array([[(1.0 + np.sin(t)) / 2.0] for t in DataSetX])
+
+    
     
     
     dim0 = len(DataSetX[0])
@@ -229,21 +235,21 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
         XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(DataSetX))]
         ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(DataSetX))]
         #model = sklearn.linear_model.LinearRegression()
-        model = DecisionTreeRegressor(max_depth = 8)
+        model = DecisionTreeRegressor(max_depth = 7)
         #print(XSetOnThisLayer[0].shape)
         #print(ParamSetOnThisLayer[0].shape)
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
         Generic_models.append(model)
         
     #
-    Predictions1 = [calculate_prediction_from_coeffs(DataSetX[i], coeffs_total, mode_loss, activation_mode) for i in range(len(DataSetX))]
+    Predictions1 = [calculate_prediction_from_coeffs(DataSetX1[i], coeffs_total, mode_loss, activation_mode) for i in range(len(DataSetX1))]
     
     Predictions2 = [calculate_prediction_from_coeffs(DataSetX[i], List_of_coeffs_for_different_pairs[i], mode_loss, activation_mode) for i in range(len(DataSetX))]
     Predictions3 = [calculate_prediction(DataSetX1[i], Generic_models,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
-    plt.plot(DataSetX,[x[0] for x in DataSetY])
+    plt.plot(DataSetX_0,[x[0] for x in DataSetY])
     #plt.plot(DataSetX, Predictions1, 'o')
     #plt.plot(DataSetX, Predictions2, 'o')
-    plt.plot(DataSetX1, Predictions3, 'o')
+    plt.plot(DataSetX1_0, Predictions3, 'o')
     plt.show()
     
     #print(coeffs[0][0].shape, coeffs[0][1].shape, coeffs[1][0].shape, coeffs[1][1].shape)
@@ -269,10 +275,270 @@ def download_data_and_learn_all(net_architecture, mode_loss , activation_mode):
     print(calculate_prediction(DataSetX[7], models,  net_architecture, mode_loss, activation_mode, 0))
     """
 
+def download_data_and_learn_all_class(net_architecture, mode_loss , activation_mode):
+    
+    f = open("pima-indians-diabetes.data.txt",'r')
+    l = f.readlines()
+    s1 = set(np.random.permutation([i  for i in range(len(l))])[:400])
+    l = [l[i].split("\n") for i in s1]
+    l = [l[i][0].split(',') for i in range(len(l))]
+    l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+    
+    f.close()
+    Train_x = np.array([l[i][:8] for i in range(len(l))])
+    DataSetY = np.array([ [l[i][8]] for i in range(len(l))])
+    #Train_y = ( np.multiply(Train_x,Train_x) * np.matrix([[1],[1]])) / 2.0
+        #we scale dataset
+    normalizer = preprocessing.Normalizer().fit(Train_x);
+    #DataSetX = np.array(Train_x.copy())
+    DataSetX = normalizer.transform(Train_x);
+    
+    print(DataSetX[0])
+    
+    #DataSetX = np.linspace(-np.pi, np.pi, 11)
+    #DataSetX = np.array([[x] for x in DataSetX])
+    
 
+    dim0 = len(DataSetX[0])
+    
+    
+    List_of_coeffs_for_different_pairs_ones = []
+    List_of_coeffs_for_different_pairs_zeros = []
 
     
-download_data_and_learn_all(net_architecture = [2,2,2,2,2,2,1], mode_loss = "reg" , activation_mode = "sigmoid")
+        
+    print("Working for******************************************************** ", 0)
+    models_zero = learn_network_for_one_x(np.array([0.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
+    print("Working for******************************************************** ", 1)
+    models_one = learn_network_for_one_x(np.array([1.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
+    
+    X_ones = [i for i in range(len(DataSetX)) if (DataSetY[i][0] == 1.0)]
+    X_zeros = [i for i in range(len(DataSetX)) if (DataSetY[i][0] == 0.0)]
+    
+    for i in X_ones:
+        coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models_one,  net_architecture, activation_mode)
+        List_of_coeffs_for_different_pairs_ones.append(coeffs)
+        
+    for i in X_zeros:
+        coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models_zero,  net_architecture, activation_mode)
+        List_of_coeffs_for_different_pairs_zeros.append(coeffs)
+        
+        
+    coeffs_total_zeros = [[],[],[],[]]
+    
+    Generic_models_zeros = []
+    
+    coeffs_total_ones = [[],[],[],[]]
+    
+    Generic_models_ones = []
+    
+    for i in range(len(List_of_coeffs_for_different_pairs_ones[0][0])):
+        W_list = [List_of_coeffs_for_different_pairs_ones[j][0][i] for j in range(len(X_ones))]
+        W = sum(W_list)
+        coeffs_total_ones[0].append(W / len(X_ones))#
+        b_list = [List_of_coeffs_for_different_pairs_ones[j][1][i] for j in range(len(X_ones))]
+        b = sum(b_list)
+        coeffs_total_ones[1].append(b / len(X_ones))
+        
+        XSetOnThisLayer = [List_of_coeffs_for_different_pairs_ones[j][2][i] for j in range(len(X_ones))]
+        ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs_ones[j][3][i] for j in range(len(X_ones))]
+        model = sklearn.linear_model.LinearRegression()
+        #model = DecisionTreeRegressor(max_depth = 5)
+        #print(XSetOnThisLayer[0].shape)
+        #print(ParamSetOnThisLayer[0].shape)
+        model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
+        Generic_models_ones.append(model)    
+        
+    for i in range(len(List_of_coeffs_for_different_pairs_zeros[0][0])):
+        W_list = [List_of_coeffs_for_different_pairs_zeros[j][0][i] for j in range(len(X_zeros))]
+        W = sum(W_list)
+        coeffs_total_zeros[0].append(W / len(X_zeros))#
+        b_list = [List_of_coeffs_for_different_pairs_zeros[j][1][i] for j in range(len(X_zeros))]
+        b = sum(b_list)
+        coeffs_total_zeros[1].append(b / len(X_zeros))
+        
+        XSetOnThisLayer = [List_of_coeffs_for_different_pairs_zeros[j][2][i] for j in range(len(X_zeros))]
+        ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs_zeros[j][3][i] for j in range(len(X_zeros))]
+        model = sklearn.linear_model.LinearRegression()
+        #model = DecisionTreeRegressor(max_depth = 5)
+        #print(XSetOnThisLayer[0].shape)
+        #print(ParamSetOnThisLayer[0].shape)
+        model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
+        Generic_models_zeros.append(model)
+        
+        
+        
+        
+        
+    
+    f = open("pima-indians-diabetes.data.txt",'r')
+    l = f.readlines()
+    s2 = set(np.random.permutation([i  for i in range(len(l))]))
+    s2 = s2 - s1
+    l = [l[i].split("\n") for i in s2]
+    l = [l[i][0].split(',') for i in range(len(l))]
+    l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+    
+    Train_x = np.array([l[i][:8] for i in range(len(l))])
+    DataSetY1 = np.array([ [l[i][8]] for i in range(len(l))])
+    DataSetX1 = normalizer.transform(Train_x);
+    #DataSetX1 = np.array(Train_x.copy())
+    f.close()
+    
+    #X_ones_test = [i for i in range(len(DataSetX1)) if (DataSetY1[i][0] == 1.0)]
+    #X_zeros_test = [i for i in range(len(DataSetX1)) if (DataSetY1[i][0] == 0.0)]
+     
+    Zeros_border_mean = np.array([calculate_prediction_from_coeffs(DataSetX[i], coeffs_total_zeros, mode_loss, activation_mode) for i in X_ones]).mean()
+    Ones_border_mean = np.array([calculate_prediction_from_coeffs(DataSetX[i], coeffs_total_ones, mode_loss, activation_mode) for i in X_zeros]).mean()
+    Zeros_border_var = np.array([calculate_prediction_from_coeffs(DataSetX[i], coeffs_total_zeros, mode_loss, activation_mode) for i in X_ones]).var()
+    Ones_border_var = np.array([calculate_prediction_from_coeffs(DataSetX[i], coeffs_total_ones, mode_loss, activation_mode) for i in X_zeros]).var()
+    
+    Front_zero = Zeros_border_mean - np.sqrt(Zeros_border_var)
+    Front_ones = Ones_border_mean + np.sqrt(Ones_border_var)
+    Predictions10 = [calculate_prediction_from_coeffs(DataSetX1[i], coeffs_total_zeros, mode_loss, activation_mode) for i in range(len(DataSetX1))]
+    Predictions11 = [calculate_prediction_from_coeffs(DataSetX1[i], coeffs_total_ones, mode_loss, activation_mode) for i in range(len(DataSetX1))]
+    
+    #print(Predictions10[1:20])
+    #print(Predictions11[1:20])
+    #Predictions1 = [0 if Predictions10[i] < 1.0 - Predictions11[i] else 1 for i in range(len(DataSetX1)) ]
+    Predictions1 = [pred(Predictions10[i], Predictions11[i], Front_zero, Front_ones) for i in range(len(DataSetX1))]
+    
+
+    #Predictions2 = [calculate_prediction_from_coeffs(DataSetX[i], List_of_coeffs_for_different_pairs[i], mode_loss, activation_mode) for i in range(len(DataSetX1))]
+    
+   
+    Zeros_border_mean = np.median(np.array([calculate_prediction(DataSetX[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in X_ones]).mean())
+    Ones_border_mean = np.median(np.array([calculate_prediction(DataSetX[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in X_zeros]).mean())
+    Zeros_border_var = np.array([calculate_prediction(DataSetX[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in X_ones]).var()
+    Ones_border_var = np.array([calculate_prediction(DataSetX[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in X_zeros]).var()
+    
+    Front_zero = Zeros_border_mean + 1.0 * np.sqrt(Zeros_border_var)
+    Front_ones = Ones_border_mean - 1.0 * np.sqrt(Ones_border_var)
+    
+    Predictions30 = [calculate_prediction(DataSetX1[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    Predictions31 = [calculate_prediction(DataSetX1[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    
+    Predictions3 = [pred(Predictions30[i], Predictions31[i], Front_zero, Front_ones) for i in range(len(DataSetX1))]
+    
+    
+    print(np.abs(np.array(Predictions3) - np.array([x[0] for x in DataSetY1])).sum()) 
+    print(len(Predictions3))
+    #print(Predictions30[1:20])
+    #print(Predictions31[1:20])
+    print(len([i for i in range(len(DataSetX1)) if Predictions3[i] == 1.0 and DataSetY1[i][0] == 0.0]))
+    
+    plt.plot(Predictions3,DataSetY1,'o')
+    #plt.plot(Predictions11,[1 for i in range(len(Predictions11))],'o')
+    #plt.plot(Predictions2,[x[0] for x in DataSetY],'o')
+    #plt.plot(Predictions3,[x[0] for x in DataSetY1],'o')
+    plt.plot([0.5 for i in range(11)],np.linspace(0,1, 11))
+    #plt.plot(DataSetX, Predictions2, 'o')
+    #plt.plot(DataSetX1, Predictions3, 'o')
+    plt.ylim(-2,2)
+    plt.xlim(-2,2)
+    plt.show()
+    
+    '''
+    f = open("pima-indians-diabetes.data.txt",'r')
+    l = f.readlines()
+    l = [l[i].split("\n") for i in range(100)]
+    l = [l[i][0].split(',') for i in range(len(l))]
+    l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+    
+    f.close()
+    Train_x = np.array([l[i][:8] for i in range(len(l))])
+    DataSetY = np.array([ [l[i][8]] for i in range(len(l))])
+    #Train_y = ( np.multiply(Train_x,Train_x) * np.matrix([[1],[1]])) / 2.0
+    
+    #we scale dataset
+    normalizer = preprocessing.Normalizer().fit(Train_x);
+    #Train_x_scaled = np.array(Train_x.copy())
+    DataSetX = normalizer.transform(Train_x);
+    
+    #DataSetX = np.linspace(-np.pi, np.pi, 11)
+    #DataSetX = np.array([[x] for x in DataSetX])
+    
+
+    dim0 = len(DataSetX[0])
+    
+    
+    
+    List_of_coeffs_for_different_pairs = []
+
+    for i in range(len(DataSetY)):
+        
+        print("Working for******************************************************** ", i)
+        models = learn_network_for_one_x(DataSetY[i], list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
+        coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models,  net_architecture, activation_mode)
+        List_of_coeffs_for_different_pairs.append(coeffs)
+    
+    coeffs_total = [[],[],[],[]]
+    
+    Generic_models = []
+    
+    for i in range(len(List_of_coeffs_for_different_pairs[0][0])):
+        W_list = [List_of_coeffs_for_different_pairs[j][0][i] for j in range(len(DataSetX))]
+        W = sum(W_list)
+        coeffs_total[0].append(W / len(DataSetX))#
+        b_list = [List_of_coeffs_for_different_pairs[j][1][i] for j in range(len(DataSetX))]
+        b = sum(b_list)
+        coeffs_total[1].append(b / len(DataSetX))
+        
+        XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(DataSetX))]
+        ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(DataSetX))]
+        #model = sklearn.linear_model.LinearRegression()
+        model = DecisionTreeRegressor(max_depth = 7)
+        #print(XSetOnThisLayer[0].shape)
+        #print(ParamSetOnThisLayer[0].shape)
+        model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
+        Generic_models.append(model)
+        
+    f = open("pima-indians-diabetes.data.txt",'r')
+    l = f.readlines()
+    l = [l[i].split("\n") for i in range(100,len(l))]
+    l = [l[i][0].split(',') for i in range(len(l))]
+    l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+    
+    Train_x = np.array([l[i][:8] for i in range(len(l))])
+    DataSetY1 = np.array([ [l[i][8]] for i in range(len(l))])
+    DataSetX1 = normalizer.transform(Train_x);
+    f.close()
+    
+    Predictions3 = [calculate_prediction(DataSetX1[i], Generic_models,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    Predictions3 = [1.0 if Predictions3[i] > 0.5 else 0.0 for i in range(len(Predictions3))]
+    print(np.abs(np.array(Predictions3) - np.array([x[0] for x in DataSetY1])).sum())
+    plt.plot(Predictions3,[x[0] for x in DataSetY1],'o')
+    
+    plt.ylim(-2,2)
+    plt.show()
+    '''
+    
+def pred(x, y, front_zero, front_one):
+    
+    if (x <= front_zero) and (y >= front_one):
+        if (front_zero - x > y - front_one):
+            print("RANDOOOOOM1")
+            return 0.0
+            
+        else:
+            print("RANDOOOOOM2")
+            return 1.0
+        
+    if (x <= front_zero) :
+        return 0.0
+    if (y >= front_one):
+        return 1.0
+    
+    if (x - front_zero < front_one - y):
+        return 0.0
+    else:
+        return 1.0
+    
+    
+    
+    
+
+download_data_and_learn_all_class(net_architecture = [2,2,2,2,2,2,1], mode_loss = "class" , activation_mode = "sigmoid")
 print("!!!")
 
 
