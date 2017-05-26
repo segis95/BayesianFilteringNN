@@ -44,14 +44,14 @@ def calculate_loss(X_in, y, linear_models, list_dimensions_ahead, mode_loss, act
 
 def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_ahead = [], linear_models = [], mode_loss = "reg", activation_mode = "sigma"):
     #class sklearn.preprocessing.MinMaxScaler
-    print(len(linear_models))
+    #print(len(linear_models))
     if (len(list_dimensions_behind) == 1):
         return linear_models
     
     #Parameters
     
-    number_x_items = 10
-    number_expectation_items = 10
+    number_x_items = 15
+    number_expectation_items = 15
     number_items_per_expectation = 5
     
     
@@ -62,7 +62,7 @@ def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_a
     len_parameters_vector = dim1 * dim2 + dim2
     
     
-    X_input_set =  lhs(dim1, number_x_items, criterion='center')
+    X_input_set =  2.0 * lhs(dim1, number_x_items, criterion='center') - 1.0
     #X_input_set = get_train_set(dim1, 6)
     
     x_to_expectation = list()
@@ -157,6 +157,7 @@ def calculate_optimal_coeffs(X_in, list_coeffs, linear_models, list_dimensions_a
     model = linear_models[0]
     
     #Check here!!!
+    #print(len(X_in))
     parameters = model.predict([X_in])
     
     dim1 = len(X_in)
@@ -234,8 +235,8 @@ def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mod
         
         XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(DataSetX))]
         ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(DataSetX))]
-        #model = sklearn.linear_model.LinearRegression()
-        model = DecisionTreeRegressor(max_depth = 7)
+        model = sklearn.linear_model.LinearRegression()
+        #model = DecisionTreeRegressor(max_depth = 7)
         #print(XSetOnThisLayer[0].shape)
         #print(ParamSetOnThisLayer[0].shape)
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
@@ -277,23 +278,9 @@ def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mod
 
 def download_data_and_learn_all_class(net_architecture, mode_loss , activation_mode):
     
-    f = open("pima-indians-diabetes.data.txt",'r')
-    l = f.readlines()
-    s1 = set(np.random.permutation([i  for i in range(len(l))])[:400])
-    l = [l[i].split("\n") for i in s1]
-    l = [l[i][0].split(',') for i in range(len(l))]
-    l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+    [DataSetX, DataSetY, DataSetX1, DataSetY1] = download_data(5)
     
-    f.close()
-    Train_x = np.array([l[i][:8] for i in range(len(l))])
-    DataSetY = np.array([ [l[i][8]] for i in range(len(l))])
-    #Train_y = ( np.multiply(Train_x,Train_x) * np.matrix([[1],[1]])) / 2.0
-        #we scale dataset
-    normalizer = preprocessing.Normalizer().fit(Train_x);
-    #DataSetX = np.array(Train_x.copy())
-    DataSetX = normalizer.transform(Train_x);
-    
-    print(DataSetX[0])
+    #print(DataSetX[0])
     
     #DataSetX = np.linspace(-np.pi, np.pi, 11)
     #DataSetX = np.array([[x] for x in DataSetX])
@@ -307,9 +294,9 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
 
     
         
-    print("Working for******************************************************** ", 0)
+    #print("Working for******************************************************** ", 0)
     models_zero = learn_network_for_one_x(np.array([0.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
-    print("Working for******************************************************** ", 1)
+    #print("Working for******************************************************** ", 1)
     models_one = learn_network_for_one_x(np.array([1.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
     
     X_ones = [i for i in range(len(DataSetX)) if (DataSetY[i][0] == 1.0)]
@@ -333,6 +320,8 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     Generic_models_ones = []
     
     for i in range(len(List_of_coeffs_for_different_pairs_ones[0][0])):
+        
+        
         W_list = [List_of_coeffs_for_different_pairs_ones[j][0][i] for j in range(len(X_ones))]
         W = sum(W_list)
         coeffs_total_ones[0].append(W / len(X_ones))#
@@ -349,6 +338,7 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
         Generic_models_ones.append(model)    
         
+    
     for i in range(len(List_of_coeffs_for_different_pairs_zeros[0][0])):
         W_list = [List_of_coeffs_for_different_pairs_zeros[j][0][i] for j in range(len(X_zeros))]
         W = sum(W_list)
@@ -360,7 +350,7 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
         XSetOnThisLayer = [List_of_coeffs_for_different_pairs_zeros[j][2][i] for j in range(len(X_zeros))]
         ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs_zeros[j][3][i] for j in range(len(X_zeros))]
         model = sklearn.linear_model.LinearRegression()
-        #model = DecisionTreeRegressor(max_depth = 5)
+        #model = DecisionTreeRegressor(max_depth = 2)
         #print(XSetOnThisLayer[0].shape)
         #print(ParamSetOnThisLayer[0].shape)
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
@@ -371,19 +361,7 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
         
         
     
-    f = open("pima-indians-diabetes.data.txt",'r')
-    l = f.readlines()
-    s2 = set(np.random.permutation([i  for i in range(len(l))]))
-    s2 = s2 - s1
-    l = [l[i].split("\n") for i in s2]
-    l = [l[i][0].split(',') for i in range(len(l))]
-    l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
-    
-    Train_x = np.array([l[i][:8] for i in range(len(l))])
-    DataSetY1 = np.array([ [l[i][8]] for i in range(len(l))])
-    DataSetX1 = normalizer.transform(Train_x);
-    #DataSetX1 = np.array(Train_x.copy())
-    f.close()
+
     
     #X_ones_test = [i for i in range(len(DataSetX1)) if (DataSetY1[i][0] == 1.0)]
     #X_zeros_test = [i for i in range(len(DataSetX1)) if (DataSetY1[i][0] == 0.0)]
@@ -398,11 +376,16 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     Predictions10 = [calculate_prediction_from_coeffs(DataSetX1[i], coeffs_total_zeros, mode_loss, activation_mode) for i in range(len(DataSetX1))]
     Predictions11 = [calculate_prediction_from_coeffs(DataSetX1[i], coeffs_total_ones, mode_loss, activation_mode) for i in range(len(DataSetX1))]
     
+    
     #print(Predictions10[1:20])
     #print(Predictions11[1:20])
     #Predictions1 = [0 if Predictions10[i] < 1.0 - Predictions11[i] else 1 for i in range(len(DataSetX1)) ]
-    Predictions1 = [pred(Predictions10[i], Predictions11[i], Front_zero, Front_ones) for i in range(len(DataSetX1))]
+    Predictions1 = [pred(Predictions10[i], Predictions11[i], Front_zero, Front_ones, np.sqrt(Zeros_border_var), np.sqrt(Ones_border_var)) for i in range(len(DataSetX1))]
     
+    
+    
+    print("From mean:")
+    print(1.0 - np.abs(np.array(Predictions1) - np.array([x[0] for x in DataSetY1])).sum()/len(DataSetX1)) 
 
     #Predictions2 = [calculate_prediction_from_coeffs(DataSetX[i], List_of_coeffs_for_different_pairs[i], mode_loss, activation_mode) for i in range(len(DataSetX1))]
     
@@ -412,20 +395,20 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     Zeros_border_var = np.array([calculate_prediction(DataSetX[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in X_ones]).var()
     Ones_border_var = np.array([calculate_prediction(DataSetX[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in X_zeros]).var()
     
-    Front_zero = Zeros_border_mean + 1.0 * np.sqrt(Zeros_border_var)
-    Front_ones = Ones_border_mean - 1.0 * np.sqrt(Ones_border_var)
+    Front_zero = Zeros_border_mean + 1.5 * np.sqrt(Zeros_border_var) 
+    Front_ones = Ones_border_mean - 1.5 * np.sqrt(Ones_border_var) 
     
     Predictions30 = [calculate_prediction(DataSetX1[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
     Predictions31 = [calculate_prediction(DataSetX1[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
     
-    Predictions3 = [pred(Predictions30[i], Predictions31[i], Front_zero, Front_ones) for i in range(len(DataSetX1))]
+    Predictions3 = [pred(Predictions30[i], Predictions31[i], Front_zero, Front_ones, np.sqrt(Zeros_border_var), np.sqrt(Ones_border_var)) for i in range(len(DataSetX1))]
     
-    
-    print(np.abs(np.array(Predictions3) - np.array([x[0] for x in DataSetY1])).sum()) 
-    print(len(Predictions3))
+    print("From linear models:")
+    print(1.0 - np.abs(np.array(Predictions3) - np.array([x[0] for x in DataSetY1])).sum()/len(DataSetY1) )
+    #print(len(Predictions3))
     #print(Predictions30[1:20])
     #print(Predictions31[1:20])
-    print(len([i for i in range(len(DataSetX1)) if Predictions3[i] == 1.0 and DataSetY1[i][0] == 0.0]))
+    #print(len([i for i in range(len(DataSetX1)) if Predictions3[i] == 1.0 and DataSetY1[i][0] == 0.0]))
     
     plt.plot(Predictions3,DataSetY1,'o')
     #plt.plot(Predictions11,[1 for i in range(len(Predictions11))],'o')
@@ -436,7 +419,7 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     #plt.plot(DataSetX1, Predictions3, 'o')
     plt.ylim(-2,2)
     plt.xlim(-2,2)
-    plt.show()
+    #plt.show()
     
     '''
     f = open("pima-indians-diabetes.data.txt",'r')
@@ -513,15 +496,15 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     plt.show()
     '''
     
-def pred(x, y, front_zero, front_one):
+def pred(x, y, front_zero, front_one, div_left, div_right):
     
     if (x <= front_zero) and (y >= front_one):
-        if (front_zero - x > y - front_one):
-            print("RANDOOOOOM1")
+        if ((front_zero - x) > (y - front_one)):
+            #print("RANDOOOOOM1")
             return 0.0
             
         else:
-            print("RANDOOOOOM2")
+            #print("RANDOOOOOM2")
             return 1.0
         
     if (x <= front_zero) :
@@ -529,7 +512,7 @@ def pred(x, y, front_zero, front_one):
     if (y >= front_one):
         return 1.0
     
-    if (x - front_zero < front_one - y):
+    if ((x - front_zero) < (front_one - y)):#div_right):
         return 0.0
     else:
         return 1.0
@@ -538,9 +521,265 @@ def pred(x, y, front_zero, front_one):
     
     
 
-download_data_and_learn_all_class(net_architecture = [2,2,2,2,2,2,1], mode_loss = "class" , activation_mode = "sigmoid")
-print("!!!")
 
+def download_data(n):
+    if (n == 0):
+        f = open("pima-indians-diabetes.data.txt",'r')
+        l = f.readlines()
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:400])
+        l = [l[i].split("\n") for i in s1]
+        l = [l[i][0].split(',') for i in range(len(l))]
+        l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+        
+        f.close()
+        Train_x = np.array([l[i][:8] for i in range(len(l))])
+        DataSetY = np.array([ [l[i][8]] for i in range(len(l))])
+        #Train_y = ( np.multiply(Train_x,Train_x) * np.matrix([[1],[1]])) / 2.0
+            #we scale dataset
+        normalizer = preprocessing.Normalizer().fit(Train_x);
+        #DataSetX = np.array(Train_x.copy())
+        DataSetX = normalizer.transform(Train_x);
+           
+        f = open("pima-indians-diabetes.data.txt",'r')
+        l = f.readlines() 
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(',') for i in range(len(l))]
+        l = [[float(l[i][j]) for j in range(len(l[i]))] for i in range(len(l))]
+        f.close()
+        Train_x = np.array([l[i][:8] for i in range(len(l))])
+        DataSetY1 = np.array([ [l[i][8]] for i in range(len(l))])
+        DataSetX1 = normalizer.transform(Train_x);
+        
+        
+    if (n == 1):
+        f = open("diabetes.txt",'r')
+        l = f.readlines()
+        
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:400])
+        l = [l[i].split("\n") for i in s1]
+        
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 10)]
+        
+        DataSetY = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0] for i in range(len(l))])
+        
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i]) ) ]) for i in range(len(l)) ]
 
+        
+        DataSetX = np.array(l) 
+        
+        f.close()
+        
+        f = open("diabetes.txt",'r')
+        l = f.readlines()
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 10)]
+        
+        DataSetY1 = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0]  for i in range(len(l))])
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i])) ]) for i in range(len(l)) ]
+        DataSetX1 = np.array(l) 
+        f.close()
+        
+    if (n == 2):
+        f = open("breast.txt",'r')
+        l = f.readlines()
+        
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:350])
+        l = [l[i].split("\n") for i in s1]
+        
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        
+        l = [x for x in l if (len(x) == 12)]
+        
+        DataSetY = np.array([ [1.0] if float(l[i][0]) == 4.0 else [0.0] for i in range(len(l))])
+        
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i]) ) ]) for i in range(len(l)) ]
+
+        
+        DataSetX = np.array(l) 
+        
+        f.close()
+        
+        f = open("breast.txt",'r')
+        l = f.readlines()
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 12)]
+        
+        DataSetY1 = np.array([ [1.0] if float(l[i][0]) == 4.0 else [0.0]  for i in range(len(l))])
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i])) ]) for i in range(len(l)) ]
+        DataSetX1 = np.array(l) 
+        f.close()
+        
+    if (n == 3):
+        f = open("fouclass.txt",'r')
+        l = f.readlines()
+        
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:650])
+        l = [l[i].split("\n") for i in s1]
+        
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        
+        l = [x for x in l if (len(x) == 4)]
+        
+        DataSetY = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0] for i in range(len(l))])
+        
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i]) ) ]) for i in range(len(l)) ]
+
+        
+        DataSetX = np.array(l) 
+        
+        f.close()
+        
+        f = open("fouclass.txt",'r')
+        l = f.readlines()
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 4)]
+        
+        DataSetY1 = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0]  for i in range(len(l))])
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i])) ]) for i in range(len(l)) ]
+        DataSetX1 = np.array(l) 
+        f.close()
+
+    if (n == 4):
+        f = open("german.txt",'r')
+        l = f.readlines()
+        
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:900])
+        l = [l[i].split("\n") for i in s1]
+        
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        
+        l = [x for x in l if (len(x) == 26)]
+        
+        DataSetY = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0] for i in range(len(l))])
+        
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i]) ) ]) for i in range(len(l)) ]
+
+        
+        DataSetX = np.array(l) 
+        
+        f.close()
+        
+        f = open("german.txt",'r')
+        l = f.readlines()
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 26)]
+        
+        DataSetY1 = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0]  for i in range(len(l))])
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i])) ]) for i in range(len(l)) ]
+        DataSetX1 = np.array(l) 
+        f.close()
+    
+    if (n == 5):
+        f = open("heart.txt",'r')
+        l = f.readlines()
+        
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:170])
+        l = [l[i].split("\n") for i in s1]
+        
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        
+        l = [x for x in l if (len(x) == 15)]
+        
+        DataSetY = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0] for i in range(len(l))])
+        
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i]) ) ]) for i in range(len(l)) ]
+
+        
+        DataSetX = np.array(l) 
+        
+        f.close()
+        
+        f = open("heart.txt",'r')
+        l = f.readlines()
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 15)]
+        
+        DataSetY1 = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0]  for i in range(len(l))])
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i])) ]) for i in range(len(l)) ]
+        DataSetX1 = np.array(l) 
+        f.close()
+    
+    if (n == 6):
+        f = open("liver.txt",'r')
+        l = f.readlines()
+        
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:100])
+        l = [l[i].split("\n") for i in s1]
+        
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        
+        l = [x for x in l if (len(x) == 7)]
+        
+        DataSetY = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0] for i in range(len(l))])
+        
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i]) ) ]) for i in range(len(l)) ]
+
+        
+        DataSetX = np.array(l) 
+        
+        f.close()
+        
+        f = open("liver.txt",'r')
+        l = f.readlines()
+        s2 = set(np.random.permutation([i  for i in range(len(l))]))
+        s2 = s2 - s1
+        
+        l = [l[i].split("\n") for i in s2]
+        l = [l[i][0].split(' ') for i in range(len(l))]
+        l = [x for x in l if (len(x) == 7)]
+        
+        DataSetY1 = np.array([ [1.0] if float(l[i][0]) == 1.0 else [0.0]  for i in range(len(l))])
+        l = np.array([[(l[i][j].split(':')) for j in range(1,len(l[i]) - 1)] for i in range(len(l))])
+        l = [ np.array([ float(l[i][j][1]) for j in range(len(l[i])) ]) for i in range(len(l)) ]
+        DataSetX1 = np.array(l) 
+        f.close()
+    
+    return [DataSetX, DataSetY, DataSetX1, DataSetY1]
 
 #print(get_train_set(3, 10).shape)
+
+for i in range(10):
+    print(i)
+    download_data_and_learn_all_class(net_architecture = [2,2,2,2,1], mode_loss = "class" , activation_mode = "arctan")
+    #print("!!!")
+
+
