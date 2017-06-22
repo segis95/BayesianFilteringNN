@@ -11,6 +11,10 @@ from sklearn.tree import DecisionTreeRegressor
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import random
+from sklearn import svm
+import sklearn.metrics
+from sklearn.neural_network import MLPClassifier
+import time
 
 def get_train_set(dim, number_of_steps):
     z = [[y] for y in np.linspace(-4, 4, number_of_steps)]
@@ -235,8 +239,8 @@ def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mod
         
         XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(DataSetX))]
         ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(DataSetX))]
-        model = sklearn.linear_model.LinearRegression()
-        #model = DecisionTreeRegressor(max_depth = 7)
+        #model = sklearn.linear_model.LinearRegression()
+        model = DecisionTreeRegressor(max_depth = 8)
         #print(XSetOnThisLayer[0].shape)
         #print(ParamSetOnThisLayer[0].shape)
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
@@ -251,6 +255,7 @@ def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mod
     #plt.plot(DataSetX, Predictions1, 'o')
     #plt.plot(DataSetX, Predictions2, 'o')
     plt.plot(DataSetX1_0, Predictions3, 'o')
+    plt.title("[1,2,2,2,2,2,2,2,2,2,2,2,1]")
     plt.show()
     
     #print(coeffs[0][0].shape, coeffs[0][1].shape, coeffs[1][0].shape, coeffs[1][1].shape)
@@ -276,10 +281,11 @@ def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mod
     print(calculate_prediction(DataSetX[7], models,  net_architecture, mode_loss, activation_mode, 0))
     """
 
-def download_data_and_learn_all_class(net_architecture, mode_loss , activation_mode):
+def download_data_and_learn_all_class(net_architecture, mode_loss , activation_mode, dataset):
     
-    [DataSetX, DataSetY, DataSetX1, DataSetY1] = download_data(5)
+    [DataSetX, DataSetY, DataSetX1, DataSetY1] = download_data(dataset)
     
+   
     #print(DataSetX[0])
     
     #DataSetX = np.linspace(-np.pi, np.pi, 11)
@@ -292,7 +298,7 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     List_of_coeffs_for_different_pairs_ones = []
     List_of_coeffs_for_different_pairs_zeros = []
 
-    
+    List_of_coeffs_for_different_pairs = []
         
     #print("Working for******************************************************** ", 0)
     models_zero = learn_network_for_one_x(np.array([0.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
@@ -302,14 +308,16 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     X_ones = [i for i in range(len(DataSetX)) if (DataSetY[i][0] == 1.0)]
     X_zeros = [i for i in range(len(DataSetX)) if (DataSetY[i][0] == 0.0)]
     
+    
     for i in X_ones:
         coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models_one,  net_architecture, activation_mode)
         List_of_coeffs_for_different_pairs_ones.append(coeffs)
+        List_of_coeffs_for_different_pairs.append(coeffs)
         
     for i in X_zeros:
         coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models_zero,  net_architecture, activation_mode)
         List_of_coeffs_for_different_pairs_zeros.append(coeffs)
-        
+        List_of_coeffs_for_different_pairs.append(coeffs)
         
     coeffs_total_zeros = [[],[],[],[]]
     
@@ -319,10 +327,13 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     
     Generic_models_ones = []
     
+    Generic_models = []
+    
     for i in range(len(List_of_coeffs_for_different_pairs_ones[0][0])):
         
         
         W_list = [List_of_coeffs_for_different_pairs_ones[j][0][i] for j in range(len(X_ones))]
+        
         W = sum(W_list)
         coeffs_total_ones[0].append(W / len(X_ones))#
         b_list = [List_of_coeffs_for_different_pairs_ones[j][1][i] for j in range(len(X_ones))]
@@ -350,17 +361,24 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
         XSetOnThisLayer = [List_of_coeffs_for_different_pairs_zeros[j][2][i] for j in range(len(X_zeros))]
         ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs_zeros[j][3][i] for j in range(len(X_zeros))]
         model = sklearn.linear_model.LinearRegression()
-        #model = DecisionTreeRegressor(max_depth = 2)
+        #model = DecisionTreeRegressor(max_depth = 5)
         #print(XSetOnThisLayer[0].shape)
         #print(ParamSetOnThisLayer[0].shape)
         model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
         Generic_models_zeros.append(model)
         
         
+    for i in range(len(List_of_coeffs_for_different_pairs[0][0])):
+            
+        XSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][2][i] for j in range(len(X_zeros) + len(X_ones))]
+        ParamSetOnThisLayer = [List_of_coeffs_for_different_pairs[j][3][i] for j in range(len(X_zeros) + len(X_ones))]
         
-        
-        
-    
+        model = sklearn.linear_model.LinearRegression()
+        #model = DecisionTreeRegressor(max_depth = 5)
+        #print(XSetOnThisLayer[0].shape)
+        #print(ParamSetOnThisLayer[0].shape)
+        model.fit(np.array(XSetOnThisLayer), np.array(ParamSetOnThisLayer))
+        Generic_models.append(model)
 
     
     #X_ones_test = [i for i in range(len(DataSetX1)) if (DataSetY1[i][0] == 1.0)]
@@ -384,11 +402,14 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     
     
     
-    print("From mean:")
-    print(1.0 - np.abs(np.array(Predictions1) - np.array([x[0] for x in DataSetY1])).sum()/len(DataSetX1)) 
+    #print("From mean:")
+    #print(1.0 - np.abs(np.array(Predictions1) - np.array([x[0] for x in DataSetY1])).sum()/len(DataSetX1)) 
 
     #Predictions2 = [calculate_prediction_from_coeffs(DataSetX[i], List_of_coeffs_for_different_pairs[i], mode_loss, activation_mode) for i in range(len(DataSetX1))]
     
+   
+   
+   
    
     Zeros_border_mean = np.median(np.array([calculate_prediction(DataSetX[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in X_ones]).mean())
     Ones_border_mean = np.median(np.array([calculate_prediction(DataSetX[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in X_zeros]).mean())
@@ -398,29 +419,69 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     Front_zero = Zeros_border_mean + 1.5 * np.sqrt(Zeros_border_var) 
     Front_ones = Ones_border_mean - 1.5 * np.sqrt(Ones_border_var) 
     
-    Predictions30 = [calculate_prediction(DataSetX1[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
-    Predictions31 = [calculate_prediction(DataSetX1[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    Predictions30 = [calculate_prediction(DataSetX[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX))]
+    Predictions31 = [calculate_prediction(DataSetX[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX))]
     
+    Predictions30test = [calculate_prediction(DataSetX1[i], Generic_models_zeros,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    Predictions31test = [calculate_prediction(DataSetX1[i], Generic_models_ones,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    
+    #for "regression" method
+    Predictions3R = [calculate_prediction(DataSetX1[i], Generic_models,  net_architecture, mode_loss, activation_mode, 0) for i in range(len(DataSetX1))]
+    Predictions3R = np.array([1.0 if (Predictions3R[i] >= 0.5) else 0.0 for i in range(len(Predictions3R))  ])
+    
+    svm_train = np.array([[Predictions30[i][0], Predictions31[i][0]] for i in range(len(DataSetX))])
+    svm_test = np.array([[Predictions30test[i][0], Predictions31test[i][0]] for i in range(len(DataSetX1))])
+    clf = svm.NuSVC( kernel = 'poly', degree = 7)
+    clf.fit(svm_train, DataSetY[:,0])
+    
+    
+    Z = clf.predict(svm_test)
+    
+
+    #print(Z)
+    #plt.plot([Predictions30test[i] for i in range(len(DataSetY1)) if Z[i] == 0.0], [Predictions31test[i] for i in range(len(DataSetY1)) if Z[i] == 0.0],'k^')
+    #plt.plot([Predictions30test[i] for i in range(len(DataSetY1)) if Z[i] == 1.0], [Predictions31test[i] for i in range(len(DataSetY1)) if Z[i] == 1.0],'g^')
+    
+    plt.plot([Predictions30[i] for i in range(len(DataSetY)) if DataSetY[i] == 0.0], [Predictions31[i] for i in range(len(DataSetY)) if DataSetY[i] == 0.0],'ro', label = '0')
+    plt.plot([Predictions30[i] for i in range(len(DataSetY)) if DataSetY[i] == 1.0], [Predictions31[i] for i in range(len(DataSetY)) if DataSetY[i] == 1.0],'bo', label = '1')
     Predictions3 = [pred(Predictions30[i], Predictions31[i], Front_zero, Front_ones, np.sqrt(Zeros_border_var), np.sqrt(Ones_border_var)) for i in range(len(DataSetX1))]
     
-    print("From linear models:")
-    print(1.0 - np.abs(np.array(Predictions3) - np.array([x[0] for x in DataSetY1])).sum()/len(DataSetY1) )
+    plt.legend()
+    
+    clf = MLPClassifier(activation='tanh', solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,5,5,5,5))
+    
+    clf.fit(DataSetX, DataSetY[:,0])
+    
+    prediction = clf.predict(DataSetX1)
+    
+    print(str(sklearn.metrics.accuracy_score(DataSetY1[:,0], prediction, normalize = True)) + ' ' + str(sklearn.metrics.accuracy_score(DataSetY1, Predictions3R, normalize = True)) + ' ' + str(sklearn.metrics.accuracy_score(DataSetY1, Z, normalize = True)))
+    
+    
+    #print("From linear models:")
+    #print(DataSetY1[:,0])
+    #print(1.0 - np.abs(Z - DataSetY1[:,0]).sum()/len(DataSetY1) )
+    #print(sklearn.metrics.accuracy_score(DataSetY1, Z, normalize = True))
+    #print(Predictions3R)
+    #print(sklearn.metrics.accuracy_score(DataSetY1, Predictions3R, normalize = True))
     #print(len(Predictions3))
     #print(Predictions30[1:20])
     #print(Predictions31[1:20])
     #print(len([i for i in range(len(DataSetX1)) if Predictions3[i] == 1.0 and DataSetY1[i][0] == 0.0]))
     
-    plt.plot(Predictions3,DataSetY1,'o')
+    #plt.plot([Predictions30[i] for i in range(len(DataSetY)) if DataSetY[i] == 0.0], [Predictions31[i] for i in range(len(DataSetY)) if DataSetY[i] == 0.0],'ro')
+    #plt.plot([Predictions30[i] for i in range(len(DataSetY)) if DataSetY[i] == 1.0], [Predictions31[i] for i in range(len(DataSetY)) if DataSetY[i] == 1.0],'bo')
+
+    #print(Predictions30)
     #plt.plot(Predictions11,[1 for i in range(len(Predictions11))],'o')
     #plt.plot(Predictions2,[x[0] for x in DataSetY],'o')
     #plt.plot(Predictions3,[x[0] for x in DataSetY1],'o')
-    plt.plot([0.5 for i in range(11)],np.linspace(0,1, 11))
+    #///plt.plot([0.5 for i in range(11)],np.linspace(0,1, 11))
     #plt.plot(DataSetX, Predictions2, 'o')
     #plt.plot(DataSetX1, Predictions3, 'o')
-    plt.ylim(-2,2)
-    plt.xlim(-2,2)
+    plt.ylim(min(Predictions31),max(Predictions31))
+    plt.xlim(min(Predictions30),max(Predictions30))
+    plt.savefig("3.jpg")
     #plt.show()
-    
     '''
     f = open("pima-indians-diabetes.data.txt",'r')
     l = f.readlines()
@@ -629,7 +690,7 @@ def download_data(n):
         f = open("fouclass.txt",'r')
         l = f.readlines()
         
-        s1 = set(np.random.permutation([i  for i in range(len(l))])[:650])
+        s1 = set(np.random.permutation([i  for i in range(len(l))])[:550])
         l = [l[i].split("\n") for i in s1]
         
         l = [l[i][0].split(' ') for i in range(len(l))]
@@ -775,11 +836,40 @@ def download_data(n):
     
     return [DataSetX, DataSetY, DataSetX1, DataSetY1]
 
-#print(get_train_set(3, 10).shape)
 
-for i in range(10):
-    print(i)
-    download_data_and_learn_all_class(net_architecture = [2,2,2,2,1], mode_loss = "class" , activation_mode = "arctan")
-    #print("!!!")
+def network(c):
+    
+   
+    from sklearn.neural_network import MLPClassifier
+    
+    [DataSetX, DataSetY, DataSetX1, DataSetY1] = download_data(c)
+   
+    clf = MLPClassifier(activation='tanh', solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5,5,5,5,5))
+    
+    clf.fit(DataSetX, DataSetY[:,0])
+    
+    prediction = clf.predict(DataSetX1)
+    
+    print( str(sklearn.metrics.accuracy_score(DataSetY1[:,0], prediction, normalize = True)))
+        
+    
+    #print(clf.coefs_[0])
+
+#download_data_and_learn_all_reg(net_architecture = [2,2,2,2,2,2,2,2,2,2,2,1], mode_loss = "reg" , activation_mode = "sigmoid")
+
+#print(get_train_set(3, 10).shape)
+for j in [5]:
+    print("This is for" + str(j))
+    for i in range(100):
+        #print(i)
+        #network(j)
+        time.sleep(1)
+        try:
+            download_data_and_learn_all_class(net_architecture = [5,5,5,5,5,1], mode_loss = "class" , activation_mode = "arctan",dataset = j)
+        except:
+            print('Caught')
+            i = i - 1
+
+        #print("!!!")
 
 
