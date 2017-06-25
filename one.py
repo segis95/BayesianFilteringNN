@@ -15,6 +15,7 @@ from sklearn import svm
 import sklearn.metrics
 from sklearn.neural_network import MLPClassifier
 import time
+from scipy.linalg import get_blas_funcs
 
 def get_train_set(dim, number_of_steps):
     z = [[y] for y in np.linspace(-4, 4, number_of_steps)]
@@ -79,15 +80,19 @@ def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_a
         loses_expectations = dict()
         
         
+        
         for expectation in expectations:
-            
+ 
             vectors_parameters = np.random.multivariate_normal(expectation, np.identity(len_parameters_vector, float), number_items_per_expectation)
             
-            for i in range(len(vectors_parameters)):
             
+            for i in range(len(vectors_parameters)):
+                
                 W = vectors_parameters[i][:dim1 * dim2].reshape(dim1, dim2)
                 
                 b = vectors_parameters[i][dim1 * dim2:]
+                
+                
                 
                 
                 X_next = x_in.dot(W)  + b
@@ -97,15 +102,21 @@ def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_a
                 else:
                     ind = 1
                 #print(x_in.shape, W.shape, b.shape, X_next.shape)
+                
                 Loses_for_expectation[i] = calculate_loss(X_next, Y, linear_models, list_dimensions_ahead, mode_loss, activation_mode, ind)
+                
+                
                 
             loses_expectations[np.array(Loses_for_expectation).mean()] = expectation
             
             
+
         max1 = max(loses_expectations.keys())
         
         #print(max1)   
-        x_to_expectation.append(loses_expectations[max1])   
+        x_to_expectation.append(loses_expectations[max1])
+
+           
         
     #print(dim1, dim2)    
     model = sklearn.linear_model.LinearRegression()
@@ -119,7 +130,7 @@ def learn_network_for_one_x(Y, list_dimensions_behind = [2,2], list_dimensions_a
             
 
 def calculate_prediction(X_in_, linear_models, list_dimensions_ahead, mode_loss, activation_mode, ind):
-    
+    begin_time = time.clock()
     if (len(list_dimensions_ahead) == 0) and (mode_loss == "reg"):
         return X_in_
     
@@ -127,27 +138,44 @@ def calculate_prediction(X_in_, linear_models, list_dimensions_ahead, mode_loss,
         return activation_function(X_in_, activation_mode)
     
     if ind > 0:
+        
         X_in = activation_function(X_in_, activation_mode)
+
     else:
         X_in = X_in_.copy()
         ind = 1
     
+    
+
     model = linear_models[0]
-    
+
     #Check here!!!
-    parameters = model.predict([X_in])
     
+    parameters = model.predict([X_in])#4e-5
+
 
     dim1 = len(X_in)
     dim2 = list_dimensions_ahead[0]
     
     
-    W = parameters[0][:dim1 * dim2].reshape(dim1,dim2)
+    #W = parameters[0][:dim1 * dim2].reshape(dim1,dim2)
+    
+    W = parameters[0][:dim1 * dim2].reshape(dim1, dim2)#1e-5
+
+
     
     b = parameters[0][dim1 * dim2:]
     
+
+ 
     X_next = X_in.dot(W) + b
     
+    end_time = time.clock()
+    if (end_time - begin_time > 1e-4):
+        print("%.80f" % (end_time - begin_time))
+
+    #print(W.dtype)
+
     #print(X_in.shape, W.shape, b.shape, X_next.shape)
 
     
@@ -221,7 +249,9 @@ def download_data_and_learn_all_reg(net_architecture, mode_loss , activation_mod
     for i in range(len(DataSetY)):
         
         print("Working for******************************************************** ", i)
+        
         models = learn_network_for_one_x(DataSetY[i], list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
+
         coeffs = calculate_optimal_coeffs(DataSetX[i], [[],[],[],[]], models,  net_architecture, activation_mode)
         List_of_coeffs_for_different_pairs.append(coeffs)
     
@@ -301,7 +331,9 @@ def download_data_and_learn_all_class(net_architecture, mode_loss , activation_m
     List_of_coeffs_for_different_pairs = []
         
     #print("Working for******************************************************** ", 0)
+
     models_zero = learn_network_for_one_x(np.array([0.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
+
     #print("Working for******************************************************** ", 1)
     models_one = learn_network_for_one_x(np.array([1.0]), list_dimensions_behind = [dim0] + net_architecture, list_dimensions_ahead = [], linear_models = [], mode_loss = mode_loss, activation_mode = activation_mode)
     
@@ -860,7 +892,7 @@ def network(c):
 #print(get_train_set(3, 10).shape)
 for j in [5]:
     print("This is for" + str(j))
-    for i in range(100):
+    for i in range(1):
         #print(i)
         #network(j)
         time.sleep(1)
